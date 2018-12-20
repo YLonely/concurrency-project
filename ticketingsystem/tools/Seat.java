@@ -3,7 +3,7 @@ package ticketingsystem.tools;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Seat {
+class Seat {
     private Lock lock;
     private boolean available;
 

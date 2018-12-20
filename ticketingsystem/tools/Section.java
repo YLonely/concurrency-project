@@ -1,6 +1,6 @@
 package ticketingsystem.tools;
 
-public class Section {
+class Section {
     private int routeTotal;
     private int coachTotal;
     private int seatTotal;

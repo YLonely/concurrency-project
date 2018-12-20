@@ -2,7 +2,7 @@ package ticketingsystem.tools;
 
 import java.util.concurrent.atomic.AtomicLongArray;
 
-public class BitMap {
+class BitMap {
     private AtomicLongArray map;
     private static final int longSize = Long.SIZE;
     private int size;
