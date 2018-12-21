@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - Trace",
+            "request": "launch",
+            "mainClass": "ticketingsystem.Trace",
+            "projectName": "ticketingsystem_3cede806"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Test",
+            "request": "launch",
+            "mainClass": "ticketingsystem.Test",
+            "projectName": "ticketingsystem_3cede806"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - Test",
             "request": "launch",
             "mainClass": "Test",

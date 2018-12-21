@@ -45,4 +45,20 @@ public class SectionRange {
         for (int i = s; i < e; ++i)
             sections[i].free(route, coach, seat);
     }
+
+    public int countAvailables(int route, int departure, int arrival) {
+        int s = departure;
+        int e = arrival - 1;
+        long[] bitMap = sections[s - 1].snapshot(route);
+        for (int i = s; i < e; ++i) {
+            long[] bm = sections[i].snapshot(route);
+            assert bitMap.length == bm.length : "Length of route bitMap is different between sections";
+            for (int j = 0; j < bitMap.length; ++j)
+                bitMap[j] |= bm[j];
+        }
+        int availables = 0;
+        for (int i = 0; i < bitMap.length; ++i)
+            availables += BitHelper.countZeros(bitMap[i]);
+        return availables;
+    }
 }

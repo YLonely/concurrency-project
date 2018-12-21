@@ -6,27 +6,25 @@ class BitMap {
     private AtomicLongArray map;
     private static final int longSize = Long.SIZE;
     private int size;
-    private static long[] bitSetter;
-    static {
-        bitSetter = new long[longSize];
-        for (int i = 0; i < longSize; ++i)
-            bitSetter[i] = (1 << i);
-    }
 
     public BitMap(int size) {
         this.size = size;
         int mapSize = (size + longSize - 1) / longSize;
         map = new AtomicLongArray(mapSize);
+        int remainSize = mapSize * longSize - size;
+        int begin = longSize - remainSize;
+        long old = map.get(map.length() - 1);
+        map.set(map.length() - 1, BitHelper.setRange(old, begin, longSize));
     }
 
     public void set(int index) throws ArrayIndexOutOfBoundsException {
         if (index >= size || index < 0)
             throw new ArrayIndexOutOfBoundsException();
         int mapIndex = index / longSize;
-        int setterIndex = index % longSize;
+        int i = index % longSize;
         while (true) {
             long oldValue = map.get(mapIndex);
-            long newValue = oldValue | bitSetter[setterIndex];
+            long newValue = BitHelper.set(oldValue, i);
             if (map.compareAndSet(mapIndex, oldValue, newValue))
                 break;
         }
@@ -36,10 +34,10 @@ class BitMap {
         if (index >= size || index < 0)
             throw new ArrayIndexOutOfBoundsException();
         int mapIndex = index / longSize;
-        int setterIndex = index % longSize;
+        int i = index % longSize;
         while (true) {
             long oldValue = map.get(mapIndex);
-            long newValue = oldValue & (~bitSetter[setterIndex]);
+            long newValue = BitHelper.reset(oldValue, i);
             if (map.compareAndSet(mapIndex, oldValue, newValue))
                 break;
         }
