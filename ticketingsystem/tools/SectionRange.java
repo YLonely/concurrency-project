@@ -27,8 +27,11 @@ public class SectionRange {
         boolean res = true;
         int s = departure - 1;
         int e = arrival - 1;
-        for (int i = s; i < e; ++i)
+        for (int i = s; i < e; ++i) {
             res &= sections[i].isAvailable(route, coach, seat);
+            if (res == false)
+                return false;
+        }
         return res;
     }
 

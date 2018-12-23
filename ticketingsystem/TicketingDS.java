@@ -1,5 +1,6 @@
 package ticketingsystem;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import ticketingsystem.tools.BitHelper;
@@ -17,12 +18,17 @@ public class TicketingDS implements TicketingSystem {
 	private static final int fallbackThreshold = 3;
 	private SectionRange range;
 
+	private ConcurrentHashMap<Long, Ticket> record;
+
 	private void initSide() {
 		range = new SectionRange(routeNum, coachNum, seatNum, stationNum);
 		counter = new BitonicCounter((int) BitHelper.floor2power(threadNum));
+		record = new ConcurrentHashMap<>(16, 0.75f, threadNum);
 	}
 
-	public TicketingDS() {
+	public TicketingDS()
+
+	{
 		initSide();
 	}
 
@@ -36,6 +42,8 @@ public class TicketingDS implements TicketingSystem {
 	}
 
 	public Ticket buyTicket(String passenger, int route, int departure, int arrival) {
+		if (isIllegal(passenger, route, departure, arrival))
+			return null;
 		// Randomly choose a ticket
 		ThreadLocalRandom rand = ThreadLocalRandom.current();
 		int coach = 0, seat = 0;
@@ -59,18 +67,23 @@ public class TicketingDS implements TicketingSystem {
 	}
 
 	public int inquiry(int route, int departure, int arrival) {
+		if (isIllegal("Inquiry", route, departure, arrival))
+			return 0;
 		return range.countAvailables(route, departure, arrival);
 	}
 
 	public boolean refundTicket(Ticket ticket) {
+		long tid = ticket.tid;
 		int route = ticket.route;
 		int coach = ticket.coach;
 		int seat = ticket.seat;
 		int departure = ticket.departure;
 		int arrival = ticket.arrival;
-		if (coach <= 0 || coach > coachNum || seat <= 0 || seat > seatNum || route <= 0 || route > routeNum
-				|| departure >= arrival || range.isAvailable(route, coach, seat, departure, arrival))
+		if (isIllegal(ticket) || range.isAvailable(route, coach, seat, departure, arrival) || !record.containsKey(tid))
 			return false;
+		if (!isEqual(ticket, record.get(tid)))
+			return false;
+		record.remove(tid);
 		range.free(route, coach, seat, departure, arrival);
 		return true;
 	}
@@ -99,6 +112,35 @@ public class TicketingDS implements TicketingSystem {
 		t.seat = seat;
 		t.departure = departure;
 		t.arrival = arrival;
+		record.put(t.tid, t);
 		return t;
+	}
+
+	private boolean isEqual(Ticket a, Ticket b) {
+		if (a.tid != b.tid || a.passenger != b.passenger || a.route != b.route || a.coach != b.coach || a.seat != b.seat
+				|| a.departure != b.departure || a.arrival != b.arrival)
+			return false;
+		return true;
+	}
+
+	private boolean isIllegal(Ticket t) {
+		String passenger = t.passenger;
+		long tid = t.tid;
+		int route = t.route;
+		int coach = t.coach;
+		int seat = t.seat;
+		int departure = t.departure;
+		int arrival = t.arrival;
+		if (tid < 0 || passenger == null || passenger == "" || coach <= 0 || coach > coachNum || seat <= 0
+				|| seat > seatNum || route <= 0 || route > routeNum || departure >= arrival)
+			return true;
+		return false;
+	}
+
+	private boolean isIllegal(String passenger, int route, int departure, int arrival) {
+		if (passenger == null || passenger == "" || route <= 0 || route > routeNum || departure <= 0
+				|| departure > stationNum || arrival <= 0 || arrival > stationNum || departure >= arrival)
+			return true;
+		return false;
 	}
 }
