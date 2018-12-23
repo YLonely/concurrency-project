@@ -73,6 +73,8 @@ public class TicketingDS implements TicketingSystem {
 	}
 
 	public boolean refundTicket(Ticket ticket) {
+		if (ticket == null)
+			return false;
 		long tid = ticket.tid;
 		int route = ticket.route;
 		int coach = ticket.coach;
@@ -117,8 +119,9 @@ public class TicketingDS implements TicketingSystem {
 	}
 
 	private boolean isEqual(Ticket a, Ticket b) {
-		if (a.tid != b.tid || a.passenger != b.passenger || a.route != b.route || a.coach != b.coach || a.seat != b.seat
-				|| a.departure != b.departure || a.arrival != b.arrival)
+		if (a.tid != b.tid || a.passenger == null || b.passenger == null || !a.passenger.equals(b.passenger)
+				|| a.route != b.route || a.coach != b.coach || a.seat != b.seat || a.departure != b.departure
+				|| a.arrival != b.arrival)
 			return false;
 		return true;
 	}
@@ -131,14 +134,14 @@ public class TicketingDS implements TicketingSystem {
 		int seat = t.seat;
 		int departure = t.departure;
 		int arrival = t.arrival;
-		if (tid < 0 || passenger == null || passenger == "" || coach <= 0 || coach > coachNum || seat <= 0
-				|| seat > seatNum || route <= 0 || route > routeNum || departure >= arrival)
+		if (tid < 0 || coach <= 0 || coach > coachNum || seat <= 0 || seat > seatNum
+				|| isIllegal(passenger, route, departure, arrival))
 			return true;
 		return false;
 	}
 
 	private boolean isIllegal(String passenger, int route, int departure, int arrival) {
-		if (passenger == null || passenger == "" || route <= 0 || route > routeNum || departure <= 0
+		if (passenger == null || passenger.equals("") || route <= 0 || route > routeNum || departure <= 0
 				|| departure > stationNum || arrival <= 0 || arrival > stationNum || departure >= arrival)
 			return true;
 		return false;
