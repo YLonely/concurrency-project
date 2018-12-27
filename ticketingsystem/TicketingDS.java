@@ -85,7 +85,8 @@ public class TicketingDS implements TicketingSystem {
 			return false;
 		if (!isEqual(ticket, record.get(tid)))
 			return false;
-		record.remove(tid);
+		if (record.remove(tid) == null)
+			return false;
 		range.free(route, coach, seat, departure, arrival);
 		return true;
 	}

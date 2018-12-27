@@ -14,13 +14,14 @@ public class Test {
 	private final static int refund = 10;
 	private final static int buy = 40;
 	private final static int query = 100;
-	private final static long[] buyTicketTime = new long[64];
-	private final static long[] refundTime = new long[64];
-	private final static long[] inquiryTime = new long[64];
+	private final static int thread = 64;
+	private final static long[] buyTicketTime = new long[thread];
+	private final static long[] refundTime = new long[thread];
+	private final static long[] inquiryTime = new long[thread];
 
-	private final static long[] buyTotal = new long[64];
-	private final static long[] refundTotal = new long[64];
-	private final static long[] inquiryTotal = new long[64];
+	private final static long[] buyTotal = new long[thread];
+	private final static long[] refundTotal = new long[thread];
+	private final static long[] inquiryTotal = new long[thread];
 
 	private final static AtomicInteger threadId = new AtomicInteger(0);
 
@@ -33,7 +34,7 @@ public class Test {
 	public static void main(String[] args) throws InterruptedException {
 		final int[] threadNums = { 4, 8, 16, 32, 64 };
 		int p;
-		for (p = 0; p < 5; ++p) {
+		for (p = 0; p < threadNums.length; ++p) {
 			final TicketingDS tds = new TicketingDS(ROUTE_NUM, COACH_NUM, SEAT_NUM, STATION_NUM, threadNums[p]);
 			Thread[] threads = new Thread[threadNums[p]];
 			for (int i = 0; i < threadNums[p]; i++) {
