@@ -17,6 +17,10 @@ class BitMap {
         map.set(map.length() - 1, BitHelper.setRange(old, begin, longSize));
     }
 
+    public static int elementSize() {
+        return longSize;
+    }
+
     public void set(int index) throws ArrayIndexOutOfBoundsException {
         if (index >= size || index < 0)
             throw new ArrayIndexOutOfBoundsException();

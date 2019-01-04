@@ -1,12 +1,20 @@
 package ticketingsystem.tools;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 public class BitHelper {
     private static final int longSize = Long.SIZE;
     private static long[] bitSetter;
+    private static HashMap<Long, Integer> locateMap;
     static {
+        locateMap = new HashMap<>(longSize);
         bitSetter = new long[longSize];
-        for (int i = 0; i < longSize; ++i)
+        for (int i = 0; i < longSize; ++i) {
             bitSetter[i] = (long) (1L << i);
+            locateMap.put(bitSetter[i], i);
+        }
     }
 
     public static long set(long l, int i) {
@@ -32,9 +40,22 @@ public class BitHelper {
         return count;
     }
 
+    public static List<Integer> locateOnes(long l) {
+        ArrayList<Integer> location = new ArrayList<>(longSize);
+        while (l != 0) {
+            long tmp = l & (l - 1);
+            location.add(locateMap.get(l ^ tmp));
+            l = tmp;
+        }
+        return location;
+    }
+
+    public static List<Integer> locateZeros(long l) {
+        return locateOnes(~l);
+    }
+
     public static int countZeros(long l) {
-        int ones = countOnes(l);
-        return longSize - ones;
+        return countOnes(~l);
     }
 
     public static long floor2power(long l) {

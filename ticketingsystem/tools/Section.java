@@ -19,6 +19,10 @@ class Section {
             bitMap[i] = new BitMap(coachTotal * seatTotal);
     }
 
+    public static int bitMapElementSize() {
+        return BitMap.elementSize();
+    }
+
     public void lock(int route, int coach, int seat) {
         int index = this.getSeatIndex(route, coach, seat);
         sectionSeats[index].lock();
@@ -37,8 +41,8 @@ class Section {
 
     public void free(int route, int coach, int seat) throws IllegalStateException {
         int index = this.getSeatIndex(route, coach, seat);
-        sectionSeats[index].free();
         bitMap[route - 1].reset(getBitIndex(coach, seat));
+        sectionSeats[index].free();
     }
 
     public boolean isAvailable(int route, int coach, int seat) {

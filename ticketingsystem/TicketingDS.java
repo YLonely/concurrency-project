@@ -1,5 +1,6 @@
 package ticketingsystem;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -15,13 +16,13 @@ public class TicketingDS implements TicketingSystem {
 	private int stationNum = 10;
 	private int threadNum = 16;
 	private BitonicCounter counter;
-	private static final int fallbackThreshold = 3;
+	private static final int fallbackThreshold = 10;
 	private SectionRange range;
 
 	private ConcurrentHashMap<Long, Ticket> record;
 
 	private void initSide() {
-		range = new SectionRange(routeNum, coachNum, seatNum, stationNum);
+		range = new SectionRange(routeNum, coachNum, seatNum, stationNum, threadNum);
 		counter = new BitonicCounter((int) BitHelper.floor2power(threadNum));
 		record = new ConcurrentHashMap<>(16, 0.75f, threadNum);
 	}
@@ -46,23 +47,18 @@ public class TicketingDS implements TicketingSystem {
 			return null;
 		// Randomly choose a ticket
 		ThreadLocalRandom rand = ThreadLocalRandom.current();
-		int coach = 0, seat = 0;
+		// int coach = 0, seat = 0;
+		InnerTicket it = new InnerTicket(route, 0, 0, departure, arrival);
 		for (int i = 0; i < fallbackThreshold; ++i) {
-			coach = rand.nextInt(coachNum) + 1;
-			seat = rand.nextInt(seatNum) + 1;
-			if (tryBuyTicket(route, coach, seat, departure, arrival))
-				return construtTicket(passenger, route, coach, seat, departure, arrival);
+			it.coach = rand.nextInt(coachNum) + 1;
+			it.seat = rand.nextInt(seatNum) + 1;
+			if (tryBuyTicket(it))
+				return construtTicket(passenger, it);
 		}
-		int seatTotal = coachNum * seatNum - 1;
-		coach -= 1;
-		seat -= 1;
-		for (int i = 0; i < seatTotal; ++i) {
-			seat = (seat + 1) % seatNum;
-			if (seat == 0)
-				coach = (coach + 1) % coachNum;
-			if (tryBuyTicket(route, coach + 1, seat + 1, departure, arrival))
-				return construtTicket(passenger, route, coach + 1, seat + 1, departure, arrival);
-		}
+		List<InnerTicket> mayAvailables = range.locateAvailables(route, departure, arrival);
+		for (InnerTicket t : mayAvailables)
+			if (tryBuyTicket(t))
+				return construtTicket(passenger, t);
 		return null;
 	}
 
@@ -76,45 +72,34 @@ public class TicketingDS implements TicketingSystem {
 		if (ticket == null)
 			return false;
 		long tid = ticket.tid;
-		int route = ticket.route;
-		int coach = ticket.coach;
-		int seat = ticket.seat;
-		int departure = ticket.departure;
-		int arrival = ticket.arrival;
-		if (isIllegal(ticket) || range.isAvailable(route, coach, seat, departure, arrival) || !record.containsKey(tid))
+		InnerTicket it = new InnerTicket(ticket);
+		if (isIllegal(ticket) || range.isAvailable(it) || !record.containsKey(tid))
 			return false;
 		if (!isEqual(ticket, record.get(tid)))
 			return false;
 		if (record.remove(tid) == null)
 			return false;
-		range.free(route, coach, seat, departure, arrival);
+		range.free(it);
 		return true;
 	}
 
-	private boolean tryBuyTicket(int route, int coach, int seat, int departure, int arrival) {
-		if (range.isAvailable(route, coach, seat, departure, arrival)) {
+	private boolean tryBuyTicket(InnerTicket it) {
+		if (range.isAvailable(it)) {
 			try {
-				range.lock(route, coach, seat, departure, arrival);
-				if (!range.isAvailable(route, coach, seat, departure, arrival))
+				range.lock(it);
+				if (!range.isAvailable(it))
 					return false;
-				range.occupy(route, coach, seat, departure, arrival);
+				range.occupy(it);
 				return true;
 			} finally {
-				range.unlock(route, coach, seat, departure, arrival);
+				range.unlock(it);
 			}
 		}
 		return false;
 	}
 
-	private Ticket construtTicket(String passenger, int route, int coach, int seat, int departure, int arrival) {
-		Ticket t = new Ticket();
-		t.tid = counter.getNext();
-		t.passenger = passenger;
-		t.route = route;
-		t.coach = coach;
-		t.seat = seat;
-		t.departure = departure;
-		t.arrival = arrival;
+	private Ticket construtTicket(String passenger, InnerTicket it) {
+		Ticket t = it.toTicket(counter.getNext(), passenger);
 		record.put(t.tid, t);
 		return t;
 	}
