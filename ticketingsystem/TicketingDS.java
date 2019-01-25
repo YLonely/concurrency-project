@@ -24,12 +24,11 @@ public class TicketingDS implements TicketingSystem {
 	private void initSide() {
 		range = new SectionRange(routeNum, coachNum, seatNum, stationNum, threadNum);
 		counter = new BitonicCounter((int) BitHelper.floor2power(threadNum));
-		record = new ConcurrentHashMap<>(16, 0.75f, threadNum);
+		int initialCapacity = (int) (routeNum * coachNum * seatNum * stationNum * 0.5);
+		record = new ConcurrentHashMap<>(initialCapacity, 0.75f, threadNum);
 	}
 
-	public TicketingDS()
-
-	{
+	public TicketingDS() {
 		initSide();
 	}
 

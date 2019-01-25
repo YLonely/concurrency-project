@@ -6,11 +6,13 @@ class Section {
     private int seatTotal;
     private Seat[] sectionSeats;
     private BitMap[] bitMap;
+    private boolean isChanged;
 
     public Section(int routeTotal, int coachTotal, int seatTotal) {
         this.coachTotal = coachTotal;
         this.routeTotal = routeTotal;
         this.seatTotal = seatTotal;
+        this.isChanged = false;
         sectionSeats = new Seat[routeTotal * coachTotal * seatTotal];
         for (int i = 0; i < sectionSeats.length; ++i)
             sectionSeats[i] = new Seat();
@@ -37,20 +39,28 @@ class Section {
         int index = this.getSeatIndex(route, coach, seat);
         sectionSeats[index].occupy();
         bitMap[route - 1].set(getBitIndex(coach, seat));
+        isChanged = true;
     }
 
     public void free(int route, int coach, int seat) throws IllegalStateException {
         int index = this.getSeatIndex(route, coach, seat);
         bitMap[route - 1].reset(getBitIndex(coach, seat));
         sectionSeats[index].free();
+        isChanged = true;
     }
 
     public boolean isAvailable(int route, int coach, int seat) {
         return sectionSeats[this.getSeatIndex(route, coach, seat)].isAvailable();
     }
 
-    public long[] snapshot(int route) {
+    public long[] snapshot(int route, boolean clear) {
+        if (clear)
+            isChanged = false;
         return bitMap[route - 1].rawSnapshot();
+    }
+
+    public boolean isChanged() {
+        return isChanged;
     }
 
     private int getSeatIndex(int route, int coach, int seat) {
